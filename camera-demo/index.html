@@ -4,76 +4,89 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#061a3a">
-<meta name="description" content="STEM MATRIX AI camera, microphone, face detection and live captions demo">
-<title>STEM MATRIX AI — Vision & Live CC Demo</title>
+<title>STEM MATRIX AI — Vision + Live CC</title>
 <style>
-*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;padding:20px;background:linear-gradient(135deg,#061a3a,#0b5ed7);font-family:Arial,sans-serif;color:#fff}
-.card{width:min(720px,100%);padding:26px;border-radius:24px;background:#ffffff18;border:1px solid #ffffff35;text-align:center;backdrop-filter:blur(10px)}
-h1{margin:0 0 8px;font-size:28px}h2{margin:0 0 20px;font-size:17px;font-weight:400}
-.notice{padding:14px;border-radius:14px;background:#ffffff14;line-height:1.5;font-size:14px;margin-bottom:18px}
-.stage{position:relative;display:none;width:100%;margin:auto;max-height:55vh}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;padding:16px;background:linear-gradient(135deg,#061a3a,#0b5ed7);font-family:Arial,sans-serif;color:#fff}
+.card{width:min(720px,100%);padding:22px;border-radius:24px;background:#ffffff18;border:1px solid #ffffff35;text-align:center;backdrop-filter:blur(10px)}
+h1{margin:0 0 6px;font-size:27px}h2{margin:0 0 16px;font-size:17px;font-weight:400}
+.notice{padding:13px;border-radius:14px;background:#ffffff14;line-height:1.45;font-size:13px;margin-bottom:14px}
+.stage{position:relative;display:none;width:100%;margin:auto}
 video{display:block;width:100%;max-height:55vh;border-radius:18px;background:#000;object-fit:cover}
 #faces{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
-.cc{display:none;margin-top:12px;padding:14px 16px;border-radius:14px;background:#000b;font-size:18px;line-height:1.4;text-align:left;min-height:54px}
-.cc b{font-size:12px;opacity:.75;margin-right:8px}
-button{border:0;border-radius:999px;padding:14px 24px;margin:6px;font-size:16px;font-weight:700;cursor:pointer}
+button{border:0;border-radius:999px;padding:13px 20px;margin:5px;font-size:15px;font-weight:700;cursor:pointer}
 #start{background:#ffd21f;color:#111}#stop{display:none;background:#fff;color:#111}
-.controls{display:flex;justify-content:center;flex-wrap:wrap}
-.meter{height:10px;margin:18px 0 8px;border-radius:99px;background:#ffffff25;overflow:hidden}.bar{height:100%;width:0%;background:#ffd21f;transition:width .08s}
-#status{min-height:22px;margin-top:12px;font-size:14px}.features{margin-top:10px;font-size:13px;opacity:.9}.footer{margin-top:20px;font-size:12px;opacity:.8}
+.cc{display:none;margin-top:10px;padding:13px;border-radius:14px;background:#000c;font-size:18px;line-height:1.35;text-align:left;min-height:52px}
+.cc b{font-size:12px;opacity:.7;margin-right:7px}.meter{height:9px;margin:14px 0 7px;border-radius:99px;background:#ffffff25;overflow:hidden}.bar{height:100%;width:0%;background:#ffd21f}
+#status{min-height:22px;margin-top:10px;font-size:13px}.footer{margin-top:16px;font-size:11px;opacity:.8}
 </style>
 </head>
 <body>
 <main class="card">
 <h1>STEM MATRIX AI SOLUTIONS</h1>
-<h2>AI Vision + Microphone + Live Captions [CC]</h2>
-<div class="notice">Tap <b>Start Camera + Mic</b> and choose <b>Allow</b>. Face detection and speech recognition run in your browser for this demo. No camera, audio, face data, or transcript is uploaded or recorded by this page.</div>
-<div class="controls">
-<button id="start">📷🎤 Start Camera + Mic</button>
-<button id="stop">⏹ Stop</button>
-</div>
-<div class="stage" id="stage">
-<video id="camera" autoplay playsinline muted></video>
-<canvas id="faces"></canvas>
-</div>
-<div class="cc" id="cc"><b>CC</b><span id="caption">Waiting for speech…</span></div>
+<h2>AI Face Detection + Live Captions [CC]</h2>
+<div class="notice">Tap <b>Start Camera + Mic</b> and choose <b>Allow</b>. Face detection runs in your browser. Live captions use your browser's Speech Recognition when supported. This demo does not record or upload camera/audio.</div>
+<button id="start">📷🎤 Start Camera + Mic</button><button id="stop">⏹ Stop</button>
+<div class="stage" id="stage"><video id="camera" autoplay playsinline muted></video><canvas id="faces"></canvas></div>
+<div class="cc" id="cc"><b>CC</b><span id="caption">Listening for speech…</span></div>
 <div class="meter"><div class="bar" id="bar"></div></div>
-<div id="status">Camera, microphone, face detection and captions are currently off.</div>
-<div class="features">👤 Face detection • 🎤 Voice activity • 💬 Live captions</div>
+<div id="status">Camera, microphone, face detection and captions are off.</div>
 <div class="footer">Permission-based educational demonstration • STEM MATRIX AI SOLUTIONS</div>
 </main>
-<script>
+<script type="module">
 const start=document.getElementById('start'),stop=document.getElementById('stop'),video=document.getElementById('camera'),stage=document.getElementById('stage'),canvas=document.getElementById('faces'),ctx=canvas.getContext('2d'),status=document.getElementById('status'),bar=document.getElementById('bar'),cc=document.getElementById('cc'),caption=document.getElementById('caption');
-let stream=null,audioContext=null,analyser=null,raf=null,faceTimer=null,recognition=null,running=false;
+let stream=null,audioContext=null,analyser=null,raf=null,faceRaf=null,recognition=null,running=false,faceDetector=null;
 
 function setStatus(t){status.textContent=t}
-function resizeCanvas(){canvas.width=video.videoWidth||640;canvas.height=video.videoHeight||480}
-async function detectFaces(){
- if(!running)return;
- if(!('FaceDetector' in window)){ctx.clearRect(0,0,canvas.width,canvas.height);setStatus('Camera + microphone active. Face detection is not supported by this browser; live captions may still work.');return}
+function resize(){canvas.width=video.videoWidth||640;canvas.height=video.videoHeight||480}
+async function setupFaceDetector(){
  try{
-  const detector=new FaceDetector({fastMode:true,maxDetectedFaces:10});
-  const faces=await detector.detect(video);
-  resizeCanvas();ctx.clearRect(0,0,canvas.width,canvas.height);ctx.lineWidth=3;ctx.strokeStyle='#ffd21f';ctx.fillStyle='#ffd21f';ctx.font='bold 14px Arial';
-  faces.forEach((f,i)=>{const b=f.boundingBox;ctx.strokeRect(b.x,b.y,b.width,b.height);ctx.fillText('Face '+(i+1),b.x,Math.max(16,b.y-6));});
-  setStatus('Camera + microphone active • '+faces.length+' face'+(faces.length===1?'':'s')+' detected.');
+  const vision=await import('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22/vision_bundle.mjs');
+  const fileset=await vision.FilesetResolver.forVisionTasks('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22/wasm');
+  faceDetector=await vision.FaceDetector.createFromOptions(fileset,{
+   baseOptions:{modelAssetPath:'https://storage.googleapis.com/mediapipe-models/face_detector/blaze_face_short_range/float16/1/blaze_face_short_range.tflite',delegate:'GPU'},
+   runningMode:'VIDEO',minDetectionConfidence:0.5
+  });
+  return true;
+ }catch(e){console.error('Face detector failed',e);return false}
+}
+function drawFaces(){
+ if(!running||!faceDetector){if(running)faceRaf=requestAnimationFrame(drawFaces);return}
+ try{
+  resize();ctx.clearRect(0,0,canvas.width,canvas.height);
+  const result=faceDetector.detectForVideo(video,performance.now());
+  ctx.lineWidth=3;ctx.strokeStyle='#ffd21f';ctx.fillStyle='#ffd21f';ctx.font='bold 14px Arial';
+  const faces=result.detections||[];
+  for(let i=0;i<faces.length;i++){
+   const b=faces[i].boundingBox;
+   ctx.strokeRect(b.originX,b.originY,b.width,b.height);
+   ctx.fillText('Face '+(i+1),b.originX,Math.max(16,b.originY-6));
+  }
  }catch(e){}
+ faceRaf=requestAnimationFrame(drawFaces);
 }
 function startCaptions(){
  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
- if(!SR){cc.style.display='block';caption.textContent='Live captions are not supported by this browser.';return}
- recognition=new SR();recognition.continuous=true;recognition.interimResults=true;recognition.lang=navigator.language||'en-IN';
+ if(!SR){cc.style.display='block';caption.textContent='Live captions are not supported in this browser. Try Chrome on Android or desktop.';return}
+ recognition=new SR();
+ recognition.continuous=true;recognition.interimResults=true;recognition.maxAlternatives=1;recognition.lang='en-IN';
+ recognition.onstart=()=>{cc.style.display='block';caption.textContent='Listening…'};
  recognition.onresult=e=>{
-  let finalText='',interim='';
-  for(let i=e.resultIndex;i<e.results.length;i++){const txt=e.results[i][0].transcript;if(e.results[i].isFinal)finalText+=txt+' ';else interim+=txt}
-  caption.textContent=(finalText+interim).trim()||'Listening…';
+  let text='';
+  for(let i=e.resultIndex;i<e.results.length;i++) text+=e.results[i][0].transcript;
+  caption.textContent=text.trim()||'Listening…';
  };
- recognition.onerror=e=>{caption.textContent='Caption service: '+(e.error==='not-allowed'?'microphone permission is required.':e.error)};
- recognition.onend=()=>{if(running){try{recognition.start()}catch(e){}}};
- try{recognition.start();cc.style.display='block'}catch(e){cc.style.display='block';caption.textContent='Could not start live captions.'}
+ recognition.onerror=e=>{
+  console.warn('Speech recognition:',e.error);
+  cc.style.display='block';
+  if(e.error==='not-allowed'||e.error==='service-not-allowed') caption.textContent='Speech recognition permission/service was blocked. Check browser permissions.';
+  else if(e.error==='network') caption.textContent='Speech recognition needs an internet connection in this browser.';
+  else caption.textContent='Caption error: '+e.error;
+ };
+ recognition.onend=()=>{if(running){setTimeout(()=>{try{recognition.start()}catch(e){}},250)}};
+ try{recognition.start()}catch(e){caption.textContent='Could not start captions.'}
 }
 start.onclick=async()=>{
- if(!window.isSecureContext){setStatus('Camera/microphone access requires an HTTPS website.');return}
+ if(!window.isSecureContext){setStatus('HTTPS is required for camera and microphone access.');return}
  if(!navigator.mediaDevices?.getUserMedia){setStatus('This browser does not support camera/microphone access.');return}
  try{
   stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'},audio:true});
@@ -81,14 +94,20 @@ start.onclick=async()=>{
   audioContext=new (window.AudioContext||window.webkitAudioContext)();analyser=audioContext.createAnalyser();analyser.fftSize=256;audioContext.createMediaStreamSource(stream).connect(analyser);
   const data=new Uint8Array(analyser.frequencyBinCount);
   const draw=()=>{if(!running)return;analyser.getByteTimeDomainData(data);let sum=0;for(const v of data){const x=(v-128)/128;sum+=x*x}bar.style.width=Math.min(100,Math.sqrt(sum/data.length)*260)+'%';raf=requestAnimationFrame(draw)};draw();
-  resizeCanvas();faceTimer=setInterval(detectFaces,400);detectFaces();startCaptions();
- }catch(e){setStatus('Permission was denied or the camera/microphone is unavailable.')}
+  resize();
+  setStatus('Starting AI face detector and live captions…');
+  const faceOK=await setupFaceDetector();
+  if(faceOK)drawFaces();else setStatus('Camera + mic active. Face AI could not load; check internet connection.');
+  startCaptions();
+ }catch(e){console.error(e);setStatus('Permission was denied or camera/microphone is unavailable.')}
 };
 stop.onclick=()=>{
- running=false;if(raf)cancelAnimationFrame(raf);raf=null;if(faceTimer)clearInterval(faceTimer);faceTimer=null;
+ running=false;if(raf)cancelAnimationFrame(raf);if(faceRaf)cancelAnimationFrame(faceRaf);raf=null;faceRaf=null;
  if(recognition){try{recognition.onend=null;recognition.stop()}catch(e){}recognition=null}
- if(stream)stream.getTracks().forEach(t=>t.stop());stream=null;if(audioContext){audioContext.close();audioContext=null}
- video.srcObject=null;stage.style.display='none';ctx.clearRect(0,0,canvas.width,canvas.height);bar.style.width='0%';cc.style.display='none';caption.textContent='Waiting for speech…';start.style.display='inline-block';stop.style.display='none';setStatus('Camera, microphone, face detection and captions are currently off.');
+ if(stream)stream.getTracks().forEach(t=>t.stop());stream=null;
+ if(audioContext){audioContext.close();audioContext=null}
+ if(faceDetector){try{faceDetector.close()}catch(e){}faceDetector=null}
+ video.srcObject=null;stage.style.display='none';ctx.clearRect(0,0,canvas.width,canvas.height);bar.style.width='0%';cc.style.display='none';caption.textContent='Listening…';start.style.display='inline-block';stop.style.display='none';setStatus('Camera, microphone, face detection and captions are off.');
 };
 window.addEventListener('pagehide',()=>{if(stream)stream.getTracks().forEach(t=>t.stop())});
 </script>
