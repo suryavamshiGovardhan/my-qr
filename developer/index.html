@@ -1,5 +1,93 @@
-<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>STEM MATRIX • Developer</title><style>body{margin:0;background:#030b18;color:#fff;font-family:Arial;padding:18px}.wrap{max-width:950px;margin:auto}.card{background:#ffffff0d;border:1px solid #ffffff20;border-radius:20px;padding:18px;margin:12px 0}video{width:100%;max-height:65vh;background:#000;border-radius:16px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}.stat{background:#0006;padding:12px;border-radius:12px}.good{color:#54f29a}.warn{color:#ffd21f}button{padding:12px 18px;border:0;border-radius:999px;background:#ffd21f;font-weight:bold}code{word-break:break-all}</style></head><body><div class="wrap"><h1>🧠 STEM MATRIX AI CONTROL ROOM</h1><div class="card"><b>Developer session</b><p id="state" class="warn">Waiting for participant…</p><p>Participant link:</p><code id="join"></code></div><div class="card"><video id="remote" autoplay playsinline controls></video><div class="grid"><div class="stat">📷 Camera<br><b id="cam">—</b></div><div class="stat">🎤 Microphone<br><b id="mic">—</b></div><div class="stat">📍 Location<br><b id="loc">—</b></div><div class="stat">⏱ Session<br><b id="time">—</b></div></div><pre id="details" style="white-space:pre-wrap"></pre></div><div class="card"><b>Important:</b> This dashboard only receives a stream after the participant explicitly agrees and grants browser permissions. It does not bypass browser security or secretly activate sensors.</div></div><script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script><script>
-const qs=new URLSearchParams(location.search),room=qs.get('room')||'demo',devPeer='smx-dev-'+room;document.getElementById('join').textContent=location.origin+'/my-qr/join/?room='+encodeURIComponent(room);const peer=new Peer(devPeer,{host:'0.peerjs.com',port:443,path:'/',secure:true});let started;
-peer.on('open',()=>document.getElementById('state').textContent='🟢 Dashboard online — waiting for participant');peer.on('error',e=>document.getElementById('state').textContent='Connection error: '+e.type);peer.on('call',call=>{document.getElementById('state').textContent='🔴 LIVE PARTICIPANT CONNECTED';started=Date.now();call.answer();call.on('stream',s=>{document.getElementById('remote').srcObject=s;document.getElementById('cam').textContent='GRANTED';document.getElementById('mic').textContent='LIVE AUDIO'});call.on('close',()=>document.getElementById('state').textContent='Participant disconnected');const m=call.metadata||{};if(m.consent){const l=m.location;document.getElementById('loc').textContent=l&&l.lat?'GRANTED':'DENIED';document.getElementById('details').textContent=l&&l.lat?'Consent location: '+l.lat+', '+l.lon+' (±'+Math.round(l.accuracy)+'m)':'Participant did not grant location.'}});
-setInterval(()=>{if(started)document.getElementById('time').textContent=Math.floor((Date.now()-started)/1000)+'s'},1000);
-</script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>STEM MATRIX • Admin Control Room</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#030b18;color:#fff;font-family:Arial,sans-serif;padding:18px}.wrap{max-width:1100px;margin:auto}
+header{padding:10px 0 18px}.eyebrow{color:#ffd21f;font-weight:800;letter-spacing:.08em;font-size:12px}.title{font-size:30px;font-weight:900;margin:5px 0}
+.card{background:#ffffff0d;border:1px solid #ffffff1c;border-radius:20px;padding:18px;margin:12px 0}.bar{display:flex;gap:12px;justify-content:space-between;align-items:center;flex-wrap:wrap}
+.state{font-weight:800}.online{color:#54f29a}.live{color:#ff5d5d}.warn{color:#ffd21f}
+video{width:100%;max-height:68vh;background:#000;border-radius:16px;display:block}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-top:12px}
+.stat{background:#0007;padding:14px;border-radius:12px}.label{opacity:.65;font-size:12px}.value{font-weight:800;margin-top:5px}
+a{color:#ffd21f}code{word-break:break-all}.hidden{display:none}.small{opacity:.65;font-size:12px;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header><div class="eyebrow">AUTHORIZED ADMIN AREA</div><div class="title">🧠 STEM MATRIX AI CONTROL ROOM</div><div class="small">Live educational session dashboard</div></header>
+
+<div class="card">
+<div class="bar"><div><b>Session:</b> <span id="room"></span></div><div id="state" class="state warn">Connecting dashboard…</div></div>
+<p class="small">Participant page: <a id="join" target="_blank" rel="noopener"></a></p>
+</div>
+
+<div class="card">
+<video id="remote" autoplay playsinline controls></video>
+<div class="grid">
+<div class="stat"><div class="label">CAMERA</div><div class="value" id="cam">WAITING</div></div>
+<div class="stat"><div class="label">MICROPHONE</div><div class="value" id="mic">WAITING</div></div>
+<div class="stat"><div class="label">LOCATION</div><div class="value" id="loc">WAITING</div></div>
+<div class="stat"><div class="label">SESSION TIME</div><div class="value" id="time">—</div></div>
+</div>
+</div>
+
+<div id="locationCard" class="card hidden">
+<b>Participant location</b>
+<p id="locationText"></p>
+<a id="map" target="_blank" rel="noopener">Open location in map</a>
+</div>
+
+<div class="card small"><b>Consent record:</b> the live stream is accepted only after the participant explicitly agrees and grants browser permissions. This dashboard does not bypass device security or secretly activate sensors.</div>
+</div>
+
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script>
+const qs=new URLSearchParams(location.search),room=qs.get('room')||'demo',devPeer='smx-dev-'+room;
+const $=id=>document.getElementById(id);
+$('room').textContent=room;
+$('join').textContent=location.origin+'/my-qr/join/?room='+encodeURIComponent(room);
+$('join').href=location.origin+'/my-qr/join/?room='+encodeURIComponent(room);
+
+let started=0,currentCall=null;
+const peer=new Peer(devPeer,{host:'0.peerjs.com',port:443,path:'/',secure:true});
+
+peer.on('open',()=>{$('state').textContent='🟢 ADMIN ONLINE — WAITING FOR PARTICIPANT';$('state').className='state online'});
+peer.on('error',e=>{$('state').textContent='Dashboard connection error: '+e.type;$('state').className='state warn'});
+
+peer.on('call',call=>{
+  if(currentCall){try{currentCall.close()}catch(e){}}
+  currentCall=call;started=Date.now();
+  $('state').textContent='🔴 LIVE PARTICIPANT CONNECTED';$('state').className='state live';
+  call.answer();
+
+  const m=call.metadata||{};
+  if(m.consent){$('cam').textContent='GRANTED';$('mic').textContent='GRANTED';}
+  const l=m.location;
+  if(l&&l.lat){
+    $('loc').textContent='GRANTED';
+    $('locationCard').classList.remove('hidden');
+    $('locationText').textContent='Latitude: '+l.lat+' | Longitude: '+l.lon+' | Accuracy: ±'+Math.round(l.accuracy||0)+' m';
+    $('map').href='https://www.google.com/maps?q='+encodeURIComponent(l.lat+','+l.lon);
+  }else $('loc').textContent='NOT GRANTED';
+
+  call.on('stream',s=>{
+    $('remote').srcObject=s;
+    $('cam').textContent='LIVE';
+    const audio=s.getAudioTracks();
+    $('mic').textContent=audio.length?'LIVE AUDIO':'NO AUDIO';
+  });
+  call.on('close',()=>{
+    $('state').textContent='Participant disconnected';
+    $('state').className='state warn';
+    $('remote').srcObject=null;started=0;currentCall=null;
+    $('cam').textContent='WAITING';$('mic').textContent='WAITING';$('loc').textContent='WAITING';
+    $('locationCard').classList.add('hidden');
+  });
+  call.on('error',e=>console.error(e));
+});
+
+setInterval(()=>{if(started)$('time').textContent=Math.floor((Date.now()-started)/1000)+'s';else $('time').textContent='—'},1000);
+</script>
+</body>
+</html>
