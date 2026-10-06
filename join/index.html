@@ -1,164 +1,112 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>STEM MATRIX • Join</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>STEM MATRIX • Educational Demo</title>
 <style>
-body{margin:0;background:#061a3a;color:#fff;font-family:Arial,sans-serif;display:grid;place-items:center;min-height:100vh;padding:18px}
-.card{max-width:680px;width:100%;box-sizing:border-box;background:#ffffff12;border:1px solid #ffffff25;border-radius:24px;padding:24px;text-align:center}
-h1{font-size:28px} .box{background:#0005;border-radius:16px;padding:16px;text-align:left;line-height:1.6}
-.consent{margin:18px 0;text-align:left} button{padding:14px 22px;border:0;border-radius:999px;background:#ffd21f;font-weight:bold;font-size:16px;cursor:pointer}
-button:disabled{opacity:.55;cursor:not-allowed}.status{margin:14px 0;min-height:24px}.live{display:none;color:#ff5d5d;font-weight:bold}
-.video{width:100%;display:none;border-radius:18px;background:#000}
-.small{opacity:.75;font-size:12px}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(160deg,#061a3a,#09295a);color:#fff;font-family:Arial,sans-serif;min-height:100vh;display:grid;place-items:center;padding:18px}
+.card{width:min(440px,100%);background:#ffffff12;border:1px solid #ffffff22;border-radius:28px;padding:26px 22px;text-align:center;box-shadow:0 20px 60px #0005}
+.logo{font-size:25px;font-weight:800;margin:8px 0 6px}.sub{opacity:.8;margin-bottom:24px}
+.info{background:#0004;border-radius:18px;padding:16px;text-align:left;line-height:1.55;font-size:14px}
+.consent{margin:20px 0;text-align:left;font-size:14px;line-height:1.5}.consent input{width:18px;height:18px;vertical-align:middle;margin-right:8px}
+button{width:100%;padding:15px;border:0;border-radius:999px;background:#ffd21f;color:#171717;font-weight:800;font-size:16px;cursor:pointer}
+button:disabled{opacity:.55}.status{margin-top:16px;min-height:24px;font-weight:700}
+.success{display:none}.check{font-size:56px;margin:8px}.success h2{margin:6px 0 10px}.success p{line-height:1.55;opacity:.9}
+.stop{display:none;background:#fff;color:#111;margin-top:12px}.fine{font-size:11px;opacity:.6;margin-top:18px;line-height:1.4}
 </style>
 </head>
 <body>
 <main class="card">
-<h1>🧠 STEM MATRIX AI SOLUTIONS</h1>
-<h2>WebRTC Remote Vision Lab • v3</h2>
-<div class="box">This educational experiment requests <b>camera</b>, <b>microphone</b> and <b>location</b> access. If you continue, your live camera/audio will be transmitted to the authorized experiment dashboard for this session. Location is sent only after you grant it.</div>
-<div class="consent"><label><input id="agree" type="checkbox"> I understand and agree to share my camera, microphone and location for this educational demo.</label></div>
-<button id="start" type="button">I AGREE &amp; START</button>
-<div id="live" class="live">🔴 LIVE SESSION</div>
-<video id="preview" class="video" autoplay playsinline muted></video>
-<div id="status" class="status">Waiting for your consent.</div>
-<button id="stop" type="button" style="display:none;background:#fff">STOP SHARING</button>
-<p class="small">No recording is performed by this page. You can stop sharing at any time.</p>
+<section id="setup">
+<div class="logo">🧠 STEM MATRIX AI SOLUTIONS</div>
+<div class="sub">Educational Technology Demo</div>
+<div class="info">
+<b>Before you start</b><br>
+This demo uses your camera, microphone and location to connect you to the authorized STEM MATRIX experiment dashboard. Nothing starts until you give consent and your browser grants the requested permissions.
+</div>
+<div class="consent"><label><input id="agree" type="checkbox"> I agree to share my camera, microphone and location for this educational demo.</label></div>
+<button id="start" type="button">START DEMO</button>
+<div id="status" class="status">Ready when you are.</div>
+</section>
+
+<section id="success" class="success">
+<div class="check">✅</div>
+<h2>You're all set!</h2>
+<p>The educational demo is active. Your camera, microphone and location are being shared with the authorized STEM MATRIX dashboard for this session.</p>
+<button id="stop" class="stop" type="button">STOP SHARING</button>
+<div class="fine">You can stop sharing at any time. Browser permission indicators remain under your control.</div>
+</section>
 </main>
+
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <script>
 (function(){
-  const qs=new URLSearchParams(location.search);
-  const room=qs.get('room')||'demo';
-  const devPeer='smx-dev-'+room;
-  let stream=null,peer=null,call=null;
+  const qs=new URLSearchParams(location.search),room=qs.get('room')||'demo',devPeer='smx-dev-'+room;
   const $=id=>document.getElementById(id);
-  const status=$('status');
+  let stream=null,peer=null,call=null;
 
-  function setStatus(msg){ status.textContent=msg; }
+  function reset(msg){
+    if(call) call.close(); if(peer) peer.destroy();
+    if(stream) stream.getTracks().forEach(t=>t.stop());
+    call=null;peer=null;stream=null;
+    $('success').style.display='none';$('setup').style.display='block';
+    $('start').disabled=false;$('status').textContent=msg||'Ready when you are.';
+  }
 
-  $('start').addEventListener('click', async function(){
-    if(!$('agree').checked){
-      setStatus('Please tick the consent checkbox first.');
-      return;
-    }
-
-    const startBtn=$('start');
-    startBtn.disabled=true;
-
+  $('start').onclick=async function(){
+    if(!$('agree').checked){$('status').textContent='Please tick the consent box first.';return}
+    $('start').disabled=true;
     try{
-      if(!window.isSecureContext){
-        throw new Error('This page is not using HTTPS.');
-      }
-      if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
-        throw new Error('Camera/microphone access is not available in this browser.');
-      }
+      if(!window.isSecureContext) throw new Error('Secure HTTPS access is required.');
+      if(!navigator.mediaDevices?.getUserMedia) throw new Error('Camera and microphone are unavailable in this browser.');
 
-      setStatus('Requesting camera and microphone permission…');
-      stream=await navigator.mediaDevices.getUserMedia({
-        video:{facingMode:'user'},
-        audio:true
-      });
+      $('status').textContent='Please allow camera and microphone…';
+      stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'},audio:true});
 
-      $('preview').srcObject=stream;
-      $('preview').style.display='block';
-      $('live').style.display='block';
-
-      setStatus('Camera and microphone granted. Requesting location permission…');
-      let loc=null;
+      $('status').textContent='Please allow location…';
+      let locationData={denied:true};
       try{
-        loc=await new Promise(function(resolve,reject){
-          if(!navigator.geolocation){ reject(new Error('Geolocation unavailable')); return; }
+        locationData=await new Promise((resolve,reject)=>{
+          if(!navigator.geolocation) return reject();
           navigator.geolocation.getCurrentPosition(
-            function(p){
-              resolve({
-                lat:p.coords.latitude,
-                lon:p.coords.longitude,
-                accuracy:p.coords.accuracy
-              });
-            },
-            reject,
-            {enableHighAccuracy:true,timeout:10000,maximumAge:0}
+            p=>resolve({lat:p.coords.latitude,lon:p.coords.longitude,accuracy:p.coords.accuracy}),
+            reject,{enableHighAccuracy:true,timeout:10000,maximumAge:0}
           );
         });
-      }catch(e){
-        loc={denied:true};
-      }
+      }catch(e){}
 
-      if(typeof Peer==='undefined'){
-        throw new Error('The live connection library did not load. Check internet access and reload.');
-      }
+      if(typeof Peer==='undefined') throw new Error('Connection service failed to load. Please reload the page.');
 
-      setStatus('Connecting to STEM MATRIX dashboard…');
-      peer=new Peer('smx-user-'+room+'-'+Math.random().toString(36).slice(2,8),{
-        host:'0.peerjs.com',
-        port:443,
-        path:'/',
-        secure:true
-      });
+      $('status').textContent='Starting your educational session…';
+      peer=new Peer('smx-user-'+room+'-'+Math.random().toString(36).slice(2,9),{host:'0.peerjs.com',port:443,path:'/',secure:true});
 
       peer.on('open',function(){
-        setStatus('Connected to signaling service. Calling developer dashboard…');
-        call=peer.call(devPeer,stream,{
-          metadata:{
-            room:room,
-            location:loc,
-            consent:true,
-            startedAt:new Date().toISOString()
-          }
-        });
-
-        if(!call){
-          setStatus('Developer dashboard is not reachable. Open the developer page first.');
-          return;
-        }
-
-        call.on('close',function(){
-          setStatus('Developer dashboard ended the session.');
-        });
-
-        call.on('error',function(err){
-          console.error(err);
-          setStatus('Live connection failed. Keep the developer dashboard open and try again.');
-        });
-
-        setStatus('Live connection requested. Keep this page open.');
+        call=peer.call(devPeer,stream,{metadata:{
+          room:room,location:locationData,consent:true,startedAt:new Date().toISOString()
+        }});
+        if(!call) throw new Error('The STEM MATRIX dashboard is not online yet.');
+        call.on('close',()=>reset('The session ended. You can start again.'));
+        call.on('error',e=>{console.error(e);$('status').textContent='The dashboard connection was interrupted.'});
+        $('setup').style.display='none';$('success').style.display='block';
       });
 
-      peer.on('error',function(err){
-        console.error(err);
-        setStatus('Connection error: '+(err.type||'unknown')+'. Make sure the developer dashboard is open.');
+      peer.on('error',function(e){
+        console.error(e);
+        if(stream) stream.getTracks().forEach(t=>t.stop());
+        stream=null;
+        $('status').textContent='The STEM MATRIX dashboard is not available. Please try again.';
+        $('start').disabled=false;
       });
-
-      $('stop').style.display='inline-block';
     }catch(e){
       console.error(e);
-      if(stream){
-        stream.getTracks().forEach(function(t){t.stop();});
-        stream=null;
-      }
-      $('preview').srcObject=null;
-      $('preview').style.display='none';
-      $('live').style.display='none';
-      setStatus('ERROR: '+e.message);
-      startBtn.disabled=false;
+      if(stream) stream.getTracks().forEach(t=>t.stop());
+      stream=null;
+      $('status').textContent=e.message||'Could not start the demo.';
+      $('start').disabled=false;
     }
-  });
+  };
 
-  $('stop').addEventListener('click',function(){
-    if(call) call.close();
-    if(peer) peer.destroy();
-    if(stream) stream.getTracks().forEach(function(t){t.stop();});
-    call=null; peer=null; stream=null;
-    $('preview').srcObject=null;
-    $('preview').style.display='none';
-    $('live').style.display='none';
-    $('stop').style.display='none';
-    $('start').style.display='inline-block';
-    $('start').disabled=false;
-    setStatus('Sharing stopped.');
-  });
+  $('stop').onclick=()=>reset('Sharing stopped. You can start again.');
 })();
 </script>
 </body>
