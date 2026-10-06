@@ -4,6 +4,8 @@ on:
     branches: [main]
     paths:
       - 'camera-demo/**'
+      - 'join/**'
+      - 'developer/**'
       - '.github/workflows/camera-demo-pages.yml'
   workflow_dispatch:
 permissions:
@@ -20,8 +22,11 @@ jobs:
       - uses: actions/checkout@v4
       - name: Prepare site
         run: |
-          mkdir -p _site/camera-demo
+          mkdir -p _site/camera-demo _site/join _site/developer
           cp camera-demo/index.html _site/camera-demo/index.html
+          cp camera-demo/logo.jpg _site/camera-demo/logo.jpg
+          cp join/index.html _site/join/index.html
+          cp developer/index.html _site/developer/index.html
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
