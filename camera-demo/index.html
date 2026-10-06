@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#061a3a">
+<title>STEM MATRIX AI — Camera Demo</title>
+<style>
+*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;padding:20px;background:linear-gradient(135deg,#061a3a,#0b5ed7);font-family:Arial,sans-serif;color:#fff}
+.card{width:min(680px,100%);padding:26px;border-radius:24px;background:#ffffff18;border:1px solid #ffffff35;text-align:center;backdrop-filter:blur(10px)}
+h1{margin:0 0 8px;font-size:28px}h2{margin:0 0 20px;font-size:17px;font-weight:400}
+.notice{padding:14px;border-radius:14px;background:#ffffff14;line-height:1.5;font-size:14px;margin-bottom:18px}
+video{display:none;width:100%;max-height:55vh;border-radius:18px;background:#000;object-fit:cover}
+button{border:0;border-radius:999px;padding:14px 24px;margin:6px;font-size:16px;font-weight:700;cursor:pointer}
+#start{background:#ffd21f;color:#111}#stop{display:none;background:#fff;color:#111}
+#status{min-height:22px;margin-top:12px;font-size:14px}.footer{margin-top:20px;font-size:12px;opacity:.8}
+</style>
+</head>
+<body>
+<main class="card">
+<h1>STEM MATRIX AI SOLUTIONS</h1>
+<h2>AI Camera & Computer Vision Demo</h2>
+<div class="notice">This educational demo requests camera access only after you tap <b>Start Camera</b> and choose <b>Allow</b>. Video is not uploaded or recorded.</div>
+<button id="start">📷 Start Camera</button>
+<button id="stop">⏹ Stop Camera</button>
+<video id="camera" autoplay playsinline muted></video>
+<div id="status">Camera is currently off.</div>
+<div class="footer">Educational demonstration • STEM MATRIX AI SOLUTIONS</div>
+</main>
+<script>
+const start=document.getElementById('start'),stop=document.getElementById('stop'),video=document.getElementById('camera'),status=document.getElementById('status');
+let stream=null;
+start.onclick=async()=>{
+ if(!window.isSecureContext){status.textContent='Camera access requires an HTTPS website.';return}
+ if(!navigator.mediaDevices?.getUserMedia){status.textContent='This browser does not support camera access.';return}
+ try{
+  stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'},audio:false});
+  video.srcObject=stream;video.style.display='block';start.style.display='none';stop.style.display='inline-block';
+  status.textContent='Camera is active. Permission was granted by you.';
+ }catch(e){status.textContent='Camera permission was denied or the camera is unavailable.'}
+};
+stop.onclick=()=>{
+ if(stream)stream.getTracks().forEach(t=>t.stop());stream=null;video.srcObject=null;video.style.display='none';
+ start.style.display='inline-block';stop.style.display='none';status.textContent='Camera is currently off.';
+};
+window.addEventListener('pagehide',()=>{if(stream)stream.getTracks().forEach(t=>t.stop())});
+</script>
+</body>
+</html>
