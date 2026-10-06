@@ -4,110 +4,104 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#061a3a">
-<title>STEM MATRIX AI — Vision + Live CC</title>
+<title>STEM MATRIX AI — Vision Lab</title>
 <style>
-*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;padding:16px;background:linear-gradient(135deg,#061a3a,#0b5ed7);font-family:Arial,sans-serif;color:#fff}
-.card{width:min(720px,100%);padding:22px;border-radius:24px;background:#ffffff18;border:1px solid #ffffff35;text-align:center;backdrop-filter:blur(10px)}
-h1{margin:0 0 6px;font-size:27px}h2{margin:0 0 16px;font-size:17px;font-weight:400}
-.notice{padding:13px;border-radius:14px;background:#ffffff14;line-height:1.45;font-size:13px;margin-bottom:14px}
-.stage{position:relative;display:none;width:100%;margin:auto}
-video{display:block;width:100%;max-height:55vh;border-radius:18px;background:#000;object-fit:cover}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;padding:16px;background:radial-gradient(circle at 50% 0%,#123e83 0,#061a3a 55%,#020713 100%);font-family:Arial,sans-serif;color:#fff;overflow-x:hidden}
+body:before{content:"";position:fixed;inset:0;pointer-events:none;background:linear-gradient(transparent 95%,#22d3ee18 96%);background-size:100% 28px;opacity:.35}
+.card{width:min(760px,100%);padding:22px;border-radius:26px;background:#ffffff12;border:1px solid #ffffff30;box-shadow:0 0 50px #00d9ff18;text-align:center;backdrop-filter:blur(12px)}
+.logo{width:112px;height:112px;border-radius:50%;object-fit:cover;background:#fff;padding:4px;box-shadow:0 0 0 2px #ffd21f,0 0 35px #00d9ff88;margin:0 auto 12px}
+h1{margin:0;font-size:28px;letter-spacing:.5px}h2{margin:5px 0 14px;font-size:16px;font-weight:400;opacity:.9}
+.notice{padding:12px;border-radius:14px;background:#ffffff12;line-height:1.45;font-size:13px;margin-bottom:14px}
+.stage{position:relative;display:none;width:100%;margin:auto;overflow:hidden;border-radius:20px;border:1px solid #ffffff30;box-shadow:0 0 30px #00d9ff22}
+video{display:block;width:100%;max-height:55vh;border-radius:20px;background:#000;object-fit:cover}
 #faces{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
-button{border:0;border-radius:999px;padding:13px 20px;margin:5px;font-size:15px;font-weight:700;cursor:pointer}
-#start{background:#ffd21f;color:#111}#stop{display:none;background:#fff;color:#111}
-.cc{display:none;margin-top:10px;padding:13px;border-radius:14px;background:#000c;font-size:18px;line-height:1.35;text-align:left;min-height:52px}
-.cc b{font-size:12px;opacity:.7;margin-right:7px}.meter{height:9px;margin:14px 0 7px;border-radius:99px;background:#ffffff25;overflow:hidden}.bar{height:100%;width:0%;background:#ffd21f}
-#status{min-height:22px;margin-top:10px;font-size:13px}.footer{margin-top:16px;font-size:11px;opacity:.8}
+.scan{position:absolute;left:0;right:0;top:-3px;height:3px;background:#ffd21f;box-shadow:0 0 18px #ffd21f;opacity:.9;animation:scan 2.5s linear infinite;pointer-events:none}
+@keyframes scan{0%{top:0}50%{top:100%}100%{top:0}}
+.controls{display:flex;justify-content:center;flex-wrap:wrap}button{border:0;border-radius:999px;padding:13px 20px;margin:5px;font-size:15px;font-weight:700;cursor:pointer}
+#start{background:#ffd21f;color:#111;box-shadow:0 8px 25px #ffd21f33}#stop{display:none;background:#fff;color:#111}
+.cc{display:none;margin-top:10px;padding:13px;border-radius:14px;background:#000d;font-size:18px;line-height:1.35;text-align:left;min-height:52px}.cc b{font-size:12px;opacity:.7;margin-right:7px}
+.meter{height:9px;margin:14px 0 7px;border-radius:99px;background:#ffffff20;overflow:hidden}.bar{height:100%;width:0%;background:#ffd21f;box-shadow:0 0 14px #ffd21f}
+.hud{display:none;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:12px}.hud div{padding:10px 5px;border-radius:12px;background:#0006;border:1px solid #ffffff15}.hud b{display:block;font-size:16px}.hud span{font-size:10px;opacity:.65}
+#status{min-height:22px;margin-top:10px;font-size:13px}.footer{margin-top:16px;font-size:11px;opacity:.75}
+.easter{display:none;position:fixed;inset:0;place-items:center;background:#001b;z-index:10;pointer-events:none}.easter.show{display:grid;animation:flash .9s ease}.easter h3{font-size:clamp(28px,8vw,60px);text-shadow:0 0 30px #ffd21f;margin:0}.easter p{font-size:16px}@keyframes flash{0%{opacity:0}20%{opacity:1}100%{opacity:0}}
+@media(max-width:520px){.hud{grid-template-columns:repeat(2,1fr)}.card{padding:18px}.logo{width:92px;height:92px}}
 </style>
 </head>
 <body>
+<div class="easter" id="easter"><div><h3>🚀 AI MODE UNLOCKED</h3><p>STEM MATRIX detected your voice command.</p></div></div>
 <main class="card">
+<img class="logo" src="./logo.jpg" alt="STEM MATRIX AI SOLUTIONS logo">
 <h1>STEM MATRIX AI SOLUTIONS</h1>
-<h2>AI Face Detection + Live Captions [CC]</h2>
-<div class="notice">Tap <b>Start Camera + Mic</b> and choose <b>Allow</b>. Face detection runs in your browser. Live captions use your browser's Speech Recognition when supported. This demo does not record or upload camera/audio.</div>
-<button id="start">📷🎤 Start Camera + Mic</button><button id="stop">⏹ Stop</button>
-<div class="stage" id="stage"><video id="camera" autoplay playsinline muted></video><canvas id="faces"></canvas></div>
+<h2>🧠 AI Vision Lab • Face Scan • Voice • Live CC</h2>
+<div class="notice">Permission-based demo: tap <b>Start Camera + Mic</b> and choose <b>Allow</b>. Face detection and speech recognition run in your browser. Nothing is recorded or uploaded by this page.</div>
+<div class="controls"><button id="start">📷🎤 Start Camera + Mic</button><button id="stop">⏹ Stop</button></div>
+<div class="stage" id="stage"><video id="camera" autoplay playsinline muted></video><canvas id="faces"></canvas><div class="scan"></div></div>
+<div class="hud" id="hud">
+<div><b id="faceCount">0</b><span>FACES</span></div>
+<div><b id="micLevel">0%</b><span>MIC LEVEL</span></div>
+<div><b id="resolution">—</b><span>VIDEO</span></div>
+<div><b id="browser">—</b><span>BROWSER</span></div>
+</div>
 <div class="cc" id="cc"><b>CC</b><span id="caption">Listening for speech…</span></div>
 <div class="meter"><div class="bar" id="bar"></div></div>
-<div id="status">Camera, microphone, face detection and captions are off.</div>
-<div class="footer">Permission-based educational demonstration • STEM MATRIX AI SOLUTIONS</div>
+<div id="status">AI Vision Lab is ready.</div>
+<div class="footer">Educational technology demo • Face detection ≠ identity recognition • STEM MATRIX AI SOLUTIONS</div>
 </main>
 <script type="module">
-const start=document.getElementById('start'),stop=document.getElementById('stop'),video=document.getElementById('camera'),stage=document.getElementById('stage'),canvas=document.getElementById('faces'),ctx=canvas.getContext('2d'),status=document.getElementById('status'),bar=document.getElementById('bar'),cc=document.getElementById('cc'),caption=document.getElementById('caption');
+const start=document.getElementById('start'),stop=document.getElementById('stop'),video=document.getElementById('camera'),stage=document.getElementById('stage'),canvas=document.getElementById('faces'),ctx=canvas.getContext('2d'),status=document.getElementById('status'),bar=document.getElementById('bar'),cc=document.getElementById('cc'),caption=document.getElementById('caption'),hud=document.getElementById('hud'),faceCount=document.getElementById('faceCount'),micLevel=document.getElementById('micLevel'),resolution=document.getElementById('resolution'),browser=document.getElementById('browser'),easter=document.getElementById('easter');
 let stream=null,audioContext=null,analyser=null,raf=null,faceRaf=null,recognition=null,running=false,faceDetector=null;
 
 function setStatus(t){status.textContent=t}
-function resize(){canvas.width=video.videoWidth||640;canvas.height=video.videoHeight||480}
+function resize(){canvas.width=video.videoWidth||640;canvas.height=video.videoHeight||480;resolution.textContent=(video.videoWidth&&video.videoHeight)?video.videoWidth+'×'+video.videoHeight:'—'}
 async function setupFaceDetector(){
  try{
   const vision=await import('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22/vision_bundle.mjs');
   const fileset=await vision.FilesetResolver.forVisionTasks('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22/wasm');
-  faceDetector=await vision.FaceDetector.createFromOptions(fileset,{
-   baseOptions:{modelAssetPath:'https://storage.googleapis.com/mediapipe-models/face_detector/blaze_face_short_range/float16/1/blaze_face_short_range.tflite',delegate:'GPU'},
-   runningMode:'VIDEO',minDetectionConfidence:0.5
-  });
+  faceDetector=await vision.FaceDetector.createFromOptions(fileset,{baseOptions:{modelAssetPath:'https://storage.googleapis.com/mediapipe-models/face_detector/blaze_face_short_range/float16/1/blaze_face_short_range.tflite',delegate:'GPU'},runningMode:'VIDEO',minDetectionConfidence:0.5});
   return true;
- }catch(e){console.error('Face detector failed',e);return false}
+ }catch(e){console.error(e);return false}
 }
 function drawFaces(){
  if(!running||!faceDetector){if(running)faceRaf=requestAnimationFrame(drawFaces);return}
  try{
-  resize();ctx.clearRect(0,0,canvas.width,canvas.height);
-  const result=faceDetector.detectForVideo(video,performance.now());
+  resize();ctx.clearRect(0,0,canvas.width,canvas.height);const result=faceDetector.detectForVideo(video,performance.now()),faces=result.detections||[];faceCount.textContent=faces.length;
   ctx.lineWidth=3;ctx.strokeStyle='#ffd21f';ctx.fillStyle='#ffd21f';ctx.font='bold 14px Arial';
-  const faces=result.detections||[];
-  for(let i=0;i<faces.length;i++){
-   const b=faces[i].boundingBox;
-   ctx.strokeRect(b.originX,b.originY,b.width,b.height);
-   ctx.fillText('Face '+(i+1),b.originX,Math.max(16,b.originY-6));
-  }
+  faces.forEach((f,i)=>{const b=f.boundingBox;ctx.strokeRect(b.originX,b.originY,b.width,b.height);ctx.fillText('FACE '+(i+1),b.originX,Math.max(16,b.originY-6))});
+  setStatus(faces.length?('✨ AI scan: '+faces.length+' face'+(faces.length===1?'':'s')+' detected.'): 'AI scan active • looking for a face…');
  }catch(e){}
- faceRaf=requestAnimationFrame(drawFaces);
+ faceRaf=requestAnimationFrame(drawFaces)
 }
 function startCaptions(){
  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
- if(!SR){cc.style.display='block';caption.textContent='Live captions are not supported in this browser. Try Chrome on Android or desktop.';return}
- recognition=new SR();
- recognition.continuous=true;recognition.interimResults=true;recognition.maxAlternatives=1;recognition.lang='en-IN';
- recognition.onstart=()=>{cc.style.display='block';caption.textContent='Listening…'};
+ cc.style.display='block';
+ if(!SR){caption.textContent='Live captions are not supported here. Try Chrome on Android or desktop.';return}
+ recognition=new SR();recognition.continuous=true;recognition.interimResults=true;recognition.maxAlternatives=1;recognition.lang='en-IN';
+ recognition.onstart=()=>caption.textContent='Listening…';
  recognition.onresult=e=>{
-  let text='';
-  for(let i=e.resultIndex;i<e.results.length;i++) text+=e.results[i][0].transcript;
-  caption.textContent=text.trim()||'Listening…';
+  let text='';for(let i=e.resultIndex;i<e.results.length;i++)text+=e.results[i][0].transcript;
+  text=text.trim();caption.textContent=text||'Listening…';
+  if(/stem matrix/i.test(text)){easter.classList.remove('show');void easter.offsetWidth;easter.classList.add('show');}
  };
- recognition.onerror=e=>{
-  console.warn('Speech recognition:',e.error);
-  cc.style.display='block';
-  if(e.error==='not-allowed'||e.error==='service-not-allowed') caption.textContent='Speech recognition permission/service was blocked. Check browser permissions.';
-  else if(e.error==='network') caption.textContent='Speech recognition needs an internet connection in this browser.';
-  else caption.textContent='Caption error: '+e.error;
- };
- recognition.onend=()=>{if(running){setTimeout(()=>{try{recognition.start()}catch(e){}},250)}};
+ recognition.onerror=e=>{if(e.error==='not-allowed'||e.error==='service-not-allowed')caption.textContent='Speech recognition was blocked. Check browser permissions.';else if(e.error==='network')caption.textContent='Caption service needs an internet connection.';else caption.textContent='Caption status: '+e.error};
+ recognition.onend=()=>{if(running)setTimeout(()=>{try{recognition.start()}catch(e){}},300)};
  try{recognition.start()}catch(e){caption.textContent='Could not start captions.'}
 }
 start.onclick=async()=>{
- if(!window.isSecureContext){setStatus('HTTPS is required for camera and microphone access.');return}
- if(!navigator.mediaDevices?.getUserMedia){setStatus('This browser does not support camera/microphone access.');return}
+ if(!window.isSecureContext){setStatus('HTTPS is required.');return}
  try{
-  stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'},audio:true});
-  running=true;video.srcObject=stream;stage.style.display='block';start.style.display='none';stop.style.display='inline-block';
-  audioContext=new (window.AudioContext||window.webkitAudioContext)();analyser=audioContext.createAnalyser();analyser.fftSize=256;audioContext.createMediaStreamSource(stream).connect(analyser);
-  const data=new Uint8Array(analyser.frequencyBinCount);
-  const draw=()=>{if(!running)return;analyser.getByteTimeDomainData(data);let sum=0;for(const v of data){const x=(v-128)/128;sum+=x*x}bar.style.width=Math.min(100,Math.sqrt(sum/data.length)*260)+'%';raf=requestAnimationFrame(draw)};draw();
-  resize();
-  setStatus('Starting AI face detector and live captions…');
-  const faceOK=await setupFaceDetector();
-  if(faceOK)drawFaces();else setStatus('Camera + mic active. Face AI could not load; check internet connection.');
-  startCaptions();
- }catch(e){console.error(e);setStatus('Permission was denied or camera/microphone is unavailable.')}
+  stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'},audio:true});running=true;
+  video.srcObject=stream;stage.style.display='block';hud.style.display='grid';start.style.display='none';stop.style.display='inline-block';browser.textContent=(navigator.userAgent.match(/(Chrome|Firefox|Safari|Edg|SamsungBrowser)/)||['Other'])[0];
+  audioContext=new(window.AudioContext||window.webkitAudioContext)();analyser=audioContext.createAnalyser();analyser.fftSize=256;audioContext.createMediaStreamSource(stream).connect(analyser);
+  const data=new Uint8Array(analyser.frequencyBinCount);const draw=()=>{if(!running)return;analyser.getByteTimeDomainData(data);let sum=0;for(const v of data){const x=(v-128)/128;sum+=x*x}const pct=Math.min(100,Math.round(Math.sqrt(sum/data.length)*260));bar.style.width=pct+'%';micLevel.textContent=pct+'%';raf=requestAnimationFrame(draw)};draw();
+  resize();setStatus('⚡ Initializing AI vision + live captions…');const ok=await setupFaceDetector();if(ok)drawFaces();else setStatus('Camera + mic active • AI model could not load. Check internet.');startCaptions();
+ }catch(e){setStatus('Permission was denied or camera/microphone is unavailable.')}
 };
 stop.onclick=()=>{
  running=false;if(raf)cancelAnimationFrame(raf);if(faceRaf)cancelAnimationFrame(faceRaf);raf=null;faceRaf=null;
  if(recognition){try{recognition.onend=null;recognition.stop()}catch(e){}recognition=null}
- if(stream)stream.getTracks().forEach(t=>t.stop());stream=null;
- if(audioContext){audioContext.close();audioContext=null}
+ if(stream)stream.getTracks().forEach(t=>t.stop());stream=null;if(audioContext){audioContext.close();audioContext=null}
  if(faceDetector){try{faceDetector.close()}catch(e){}faceDetector=null}
- video.srcObject=null;stage.style.display='none';ctx.clearRect(0,0,canvas.width,canvas.height);bar.style.width='0%';cc.style.display='none';caption.textContent='Listening…';start.style.display='inline-block';stop.style.display='none';setStatus('Camera, microphone, face detection and captions are off.');
+ video.srcObject=null;stage.style.display='none';hud.style.display='none';ctx.clearRect(0,0,canvas.width,canvas.height);bar.style.width='0%';micLevel.textContent='0%';faceCount.textContent='0';cc.style.display='none';start.style.display='inline-block';stop.style.display='none';setStatus('AI Vision Lab is ready.');
 };
 window.addEventListener('pagehide',()=>{if(stream)stream.getTracks().forEach(t=>t.stop())});
 </script>
